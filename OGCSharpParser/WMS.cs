@@ -28,11 +28,11 @@ namespace OGCSharpParser
 
                 double GetDoubleFromXPath(string expression)
                 {
-                    string Strvalue = xmlDoc.XPathEvaluate($"string({expression})", nsManager).ToString();
-                        if (double.TryParse(Strvalue, out double value))
-                        {
-                            return value;
-                        }
+                    string? Strvalue = xmlDoc.XPathEvaluate($"string({expression})", nsManager).ToString();
+                    if (double.TryParse(Strvalue, out double value))
+                    {
+                        return value;
+                    }
                     return 0;
                 }
 
@@ -45,7 +45,7 @@ namespace OGCSharpParser
                     box.North = GetDoubleFromXPath("//LatLonBoundingBox/@maxy");
                 }
                 // WMS 1.3
-                else if (xmlDoc.XPathSelectElements( "//BoundingBox[@CRS='CRS:84']").Any())
+                else if (xmlDoc.XPathSelectElements("//BoundingBox[@CRS='CRS:84']").Any())
                 {
                     box.West = GetDoubleFromXPath("//BoundingBox[@CRS='CRS:84']/@minx");
                     box.South = GetDoubleFromXPath("//BoundingBox[@CRS='CRS:84']/@miny");
@@ -59,42 +59,7 @@ namespace OGCSharpParser
 
                 return box;
             }
-
-
-            /*
-            function selectBBox (doc) {
-  var west
-  var south
-  var east
-  var north
-
-  // WMS 1.1
-  // <LatLonBoundingBox minx="-141" miny="41" maxx="-52" maxy="84" />
-  if (select('//LatLonBoundingBox', doc).length) {
-    west = select('string(//LatLonBoundingBox/@minx)', doc, true)
-    south = select('string(//LatLonBoundingBox/@miny)', doc, true)
-    east = select('string(//LatLonBoundingBox/@maxx)', doc, true)
-    north = select('string(//LatLonBoundingBox/@maxy)', doc, true)
-  // WMS 1.3
-  // <BoundingBox CRS="CRS:84" minx="-71.63" miny="41.75" maxx="-70.78" maxy="42.90" resx="0.01" resy="0.01"/>
-  } else if (select('//BoundingBox', doc).length) {
-    west = select('string(//BoundingBox[@CRS="CRS:84"]/@minx)', doc, true)
-    south = select('string(//BoundingBox[@CRS="CRS:84"]/@miny)', doc, true)
-    east = select('string(//BoundingBox[@CRS="CRS:84"]/@maxx)', doc, true)
-    north = select('string(//BoundingBox[@CRS="CRS:84"]/@maxy)', doc, true)
-  }
-
-  if (south && west && north && east) {
-    return [Number(west), Number(south), Number(east), Number(north)]
-  }
-  return null
-}
-
-            */
         }
-
-
-
 
         public class Layer
         {
@@ -161,8 +126,8 @@ namespace OGCSharpParser
                 XmlNamespaceManager nsManager = XMLNavigator.GetNSManager();
                 string? OnlineResource = xmlDoc.XPathEvaluate("string(//OnlineResource/@xlink:href)", nsManager)?.ToString();
                 string? Version = new Service(xmlDoc).Version;
-               
-                
+
+
                 if (string.IsNullOrEmpty(OnlineResource))
                 {
                     return;
@@ -190,7 +155,7 @@ namespace OGCSharpParser
                 };
 
                 Slippy = Uri.UnescapeDataString(urlBuilder.Uri.ToString());
-               
+
                 // Create RESTful GetCapabilities
                 url = new Uri(OnlineResource);
                 queryParameters.Clear();
@@ -212,7 +177,6 @@ namespace OGCSharpParser
                 }
                 this.GetCapabilities = getCapabilities;
                 this.OnlineResource = OnlineResource;
-                this.Slippy = Slippy;
             }
         }
 
@@ -235,7 +199,15 @@ namespace OGCSharpParser
             Service service = new Service(xmlDoc);
             Layer layers = Layer.ParseLayer(xmlDoc);
             URL Urls = new URL(xmlDoc);
-            return JsonSerializer.Serialize(service) + "\n\n\n\n" + JsonSerializer.Serialize(layers) + "\n" + JsonSerializer.Serialize(Urls);
+
+            Dictionary<string, object> json = new Dictionary<string, object>
+            {
+                { "Service", service },
+                { "Layer", layers },
+                { "Url", Urls }
+            };
+
+            return JsonSerializer.Serialize(json);
         }
 
     }

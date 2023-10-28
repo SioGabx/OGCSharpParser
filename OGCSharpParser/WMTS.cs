@@ -233,7 +233,14 @@ namespace OGCSharpParser
             Service service = new Service(xmlDoc);
             List<Layer> layers = Layer.ParseLayers(xmlDoc);
             URL Urls = new URL(xmlDoc);
-            return JsonSerializer.Serialize(service) + "\n" + JsonSerializer.Serialize(layers) + "\n" + JsonSerializer.Serialize(Urls);
+            Dictionary<string, object> json = new Dictionary<string, object>
+            {
+                { "Service", service },
+                { "Layer", layers },
+                { "Url", Urls }
+            };
+
+            return JsonSerializer.Serialize(json);
         }
 
     }
